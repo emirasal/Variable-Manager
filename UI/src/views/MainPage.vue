@@ -80,7 +80,7 @@
               </tr>
               <tr class="new-parameter-row">
                 <td><input type="text" v-model="newParameter.parameter" placeholder="New Parameter" class="new-input"></td>
-                <td><input type="text" v-model="newParameter.value" placeholder="Value" class="new-input"></td>
+                <td><input type="text" v-model="newParameter.value" placeholder="New Value" class="new-input"></td>
                 <td><input type="text" v-model="newParameter.desc" placeholder="New Description" class="new-input"></td>
                 <td></td>
                 <td>
@@ -111,6 +111,7 @@ const router = useRouter();
 const parameters = ref([]);
 const newParameter = ref({ parameter: '', value: '', desc: '' });
 const sortOrder = ref('asc');
+let currentEditingParameter = ref(null);
 
 const fetchParameters = async () => {
   try {
@@ -168,11 +169,34 @@ const deleteParameter = async (parameter) => {
   }
 };
 
-const editParameter = (parameter) => {
-  parameter.isEditing = true;
-  parameter.editKey = parameter.parameter;
-  parameter.editValue = parameter.value;
-  parameter.editDescription = parameter.desc;
+const editParameter = async (parameter) => {
+  try {
+    const idToken = await auth.currentUser.getIdToken(true);
+    const response = await axios.get(`http://localhost:3000/variables/getEditField/${parameter.oldParameter}`, {
+      headers: {
+        'Authorization': idToken
+      }
+    });
+    if (response.data.isBeingEdited) {
+      alert('This parameter is already being edited by another user.');
+    } else {
+      await axios.post('http://localhost:3000/variables/setEditField', {
+        documentId: parameter.oldParameter,
+        isBeingEdited: true
+      }, {
+        headers: {
+          'Authorization': idToken
+        }
+      });
+      parameter.isEditing = true;
+      parameter.editKey = parameter.parameter;
+      parameter.editValue = parameter.value;
+      parameter.editDescription = parameter.desc;
+      currentEditingParameter.value = parameter.oldParameter;
+    }
+  } catch (error) {
+    console.error('Error checking or setting edit field:', error);
+  }
 };
 
 const submitEdit = async (parameter) => {
@@ -184,18 +208,50 @@ const submitEdit = async (parameter) => {
       desc: parameter.editDescription,
       createDate: parameter.createDate
     };
-    await axios.post(`http://localhost:3000/variables/edit/${parameter.oldParameter}`, updatedParameter, {
+    const response = await axios.post(`http://localhost:3000/variables/edit/${parameter.oldParameter}`, updatedParameter, {
       headers: {
         'Authorization': idToken
       }
     });
-    parameter.parameter = updatedParameter.parameter;
-    parameter.value = updatedParameter.value;
-    parameter.desc = updatedParameter.desc;
-    parameter.isEditing = false;
+    console.log(response.data);
+    if (response.data.message === "Session Timed Out") {
+      refreshPage();
+      alert('Your session has timed out. Please try again.');
+    } else {
+      parameter.parameter = updatedParameter.parameter;
+      parameter.value = updatedParameter.value;
+      parameter.desc = updatedParameter.desc;
+      parameter.isEditing = false;
+      currentEditingParameter.value = null;
+      await axios.post('http://localhost:3000/variables/setEditField', {
+        documentId: parameter.oldParameter,
+        isBeingEdited: false
+      }, {
+        headers: {
+          'Authorization': idToken
+      }});
+    }
   } catch (error) {
     console.error('Error editing parameter:', error);
     alert('Failed to edit parameter. Please try again.');
+  }
+};
+
+const resetEditField = async () => {
+  if (currentEditingParameter.value) {
+    try {
+      const idToken = await auth.currentUser.getIdToken(true);
+      await axios.post('http://localhost:3000/variables/setEditField', {
+        documentId: currentEditingParameter.value,
+        isBeingEdited: false
+      }, {
+        headers: {
+          'Authorization': idToken
+        }
+      });
+    } catch (error) {
+      console.error('Error resetting edit field:', error);
+    }
   }
 };
 
@@ -235,10 +291,12 @@ const sortParametersByDate = () => {
 onMounted(() => {
   fetchParameters();
   window.addEventListener('resize', updateIsMobile);
+  window.addEventListener('beforeunload', resetEditField);
 });
 
 onUnmounted(() => {
   window.removeEventListener('resize', updateIsMobile);
+  window.removeEventListener('beforeunload', resetEditField);
 });
 </script>
 

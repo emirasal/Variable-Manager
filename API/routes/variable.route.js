@@ -1,5 +1,5 @@
 const express = require('express');
-const { uploadVariablesData, getVariablesData, deleteVariablesData, editVariablesData } = require("../firebase.js");
+const { uploadVariablesData, getVariablesData, deleteVariablesData, editVariablesData, setIsBeingEdited, getIsBeingEdited } = require("../firebase.js");
 const { isAuthenticated } = require("../firebase.js");
 
 const router = express.Router();
@@ -53,6 +53,35 @@ router.post('/edit/:oldParameter', async (req, res) => {
         }
     } catch (error) {
         console.error('Error editing variables data:', error);
+        res.status(500).json({ message: 'Internal Server Error' });
+    }
+});
+
+router.post('/setEditField', async (req, res) => {
+    const { documentId, isBeingEdited } = req.body;
+
+    try {
+        const result = await setIsBeingEdited(documentId, isBeingEdited);
+        res.status(result.success ? 200 : 404).json(result);
+    } catch (error) {
+        console.error('Error in setIsBeingEdited:', error);
+        res.status(500).json({ success: false, message: 'Internal Server Error' });
+    }
+});
+
+
+router.get('/getEditField/:documentId', async (req, res) => {
+    const documentId = req.params.documentId;
+
+    try {
+        const result = await getIsBeingEdited(documentId);
+        if (result.success) {
+            res.status(200).json({ isBeingEdited: result.isBeingEdited });
+        } else {
+            res.status(404).json({ message: result.message });
+        }
+    } catch (error) {
+        console.error('Error in getIsBeingEdited:', error);
         res.status(500).json({ message: 'Internal Server Error' });
     }
 });
