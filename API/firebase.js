@@ -92,6 +92,24 @@ const getVariablesData = async () => {
     }
 };
 
+const getParameterAndValue = async () => {
+    try {
+        const collectionRef = collection(firestoreDb, "variables");
+        const querySnapshot = await getDocs(collectionRef);
+
+        // Create an object to hold parameter-value pairs
+        const parameterValueData = {};
+        querySnapshot.forEach(doc => {
+            const data = doc.data();
+            parameterValueData[data.parameter] = data.value;
+        });
+
+        return parameterValueData;
+    } catch (error) {
+        errorHandler(error, "firebase-getParameterAndValue");
+    }
+};
+
 const deleteVariablesData = async (documentId) => {
     try {
         const docRef = doc(firestoreDb, "variables", documentId);
@@ -218,5 +236,6 @@ module.exports = {
     deleteVariablesData,
     editVariablesData,
     setIsBeingEdited,
-    getIsBeingEdited
+    getIsBeingEdited,
+    getParameterAndValue
 };

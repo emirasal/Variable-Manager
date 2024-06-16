@@ -1,5 +1,5 @@
 const express = require('express');
-const { uploadVariablesData, getVariablesData, deleteVariablesData, editVariablesData, setIsBeingEdited, getIsBeingEdited } = require("../firebase.js");
+const { uploadVariablesData, getVariablesData, deleteVariablesData, editVariablesData, setIsBeingEdited, getIsBeingEdited, getParameterAndValue } = require("../firebase.js");
 const { isAuthenticated } = require("../firebase.js");
 
 const router = express.Router();
@@ -15,12 +15,22 @@ router.post('/add', async (req, res) => {
     }
 });
 
-router.get('/getAll', isAuthenticated, async (req, res) => {
+router.get('/getAll', async (req, res) => {
     try {
         const data = await getVariablesData();
         res.json(data);
     } catch (error) {
         console.error("Error retrieving data:", error);
+        res.status(500).json({ error: "Internal Server Error" });
+    }
+});
+
+router.get('/getAllParameterAndValue', async (req, res) => {
+    try {
+        const data = await getParameterAndValue();
+        res.json(data);
+    } catch (error) {
+        console.error("Error retrieving parameter and value:", error);
         res.status(500).json({ error: "Internal Server Error" });
     }
 });
