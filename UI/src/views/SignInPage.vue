@@ -1,7 +1,7 @@
 <template>
   <div class="signin-container">
     <div class="signin-box">
-      <img src="@/assets/logo.png" alt="Logo" class="logo">
+      <img src="/logo.png" alt="Logo" class="logo">
       <h1>Please sign in</h1>
       <p><input type="text" placeholder="E-mail address" v-model="email" @keyup.enter="signin" /></p>
       <p><input type="password" placeholder="Password" v-model="password" @keyup.enter="signin" /></p>
@@ -69,12 +69,12 @@ const signin = () => {
 }
 
 .logo {
-  width: 160px; /* Increase the size of the logo */
-  margin-bottom: 1.5rem; /* Adjust margin for better spacing */
+  width: 160px; 
+  margin-bottom: 1.5rem;
 }
 
 h1 {
-  font-size: 1.2rem; /* Make the text smaller */
+  font-size: 1.2rem; 
   margin-bottom: 1rem;
   color: #b0b0d1;
 }
@@ -91,9 +91,9 @@ input[type="text"], input[type="password"] {
 }
 
 input[type="text"]:focus, input[type="password"]:focus {
-  border-color: #cf2727; /* Change border color to reddish when focused */
-  border-width: 1.5px; /* Increase the border width */
-  outline: none; /* Remove the default outline */
+  border-color: #cf2727; 
+  border-width: 1.5px; 
+  outline: none; 
 }
 
 input::placeholder {
@@ -123,6 +123,5 @@ input::placeholder {
 footer {
   margin-top: 2rem;
   color: #a0a0c1;
-  font-size: 0.9rem;
 }
 </style>

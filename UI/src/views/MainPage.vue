@@ -1,8 +1,8 @@
 <template>
-  <div class="app-container">
+  <div>
     <div class="header">
-      <img src="@/assets/logo.png" alt="Logo" class="site-logo">
-      <img src="@/assets/user.png" alt="User Icon" @click="toggleDropdown" class="user-icon">
+      <img src="logo.png" alt="Logo" class="site-logo">
+      <img src="/user.png" alt="User Icon" @click="toggleDropdown" class="user-icon">
       <div class="dropdown" v-if="showDropdown">
         <button @click="handleSignOut">Sign Out</button>
       </div>
@@ -66,10 +66,10 @@
                 <td v-if="!parameter.isEditing">{{ parameter.value }}</td>
                 <td v-else><input type="text" v-model="parameter.editValue" class="new-input"></td>
                 <td v-if="!parameter.isEditing">
-                  <div class="truncate">{{ parameter.desc }}</div>
+                  <div>{{ parameter.desc }}</div>
                 </td>
                 <td v-else><input type="text" v-model="parameter.editDescription" class="new-input"></td>
-                <td class="centered">{{ formatDate(parameter.createDate) }}</td>
+                <td class="parameter-date centered">{{ formatDate(parameter.createDate) }}</td>
                 <td>
                   <div class="action-buttons">
                     <button v-if="!parameter.isEditing" @click="editParameter(parameter)" class="edit-button">Edit</button>
@@ -95,6 +95,7 @@
       </div>
     </div>
   </div>
+  <footer>Built by Emir Asal © 2024</footer>
 </template>
 
 <script setup>
@@ -258,7 +259,6 @@ const resetEditField = async () => {
 const handleSignOut = () => {
   signOut(auth).then(() => {
     router.push("/signin");
-    showDropdown.value = false;
   });
 };
 
@@ -302,38 +302,21 @@ onUnmounted(() => {
 
 <style scoped>
 body {
-  background-color: #121212;
-  color: #fff;
   font-family: 'Roboto', sans-serif;
-  margin: 0;
-  padding: 0;
-}
-
-.app-container {
-  width: 100%;
-  padding: 0;
-  margin: 0;
 }
 
 .header {
   width: 100%;
   display: flex;
   justify-content: space-between;
-  align-items: center;
   padding: 20px 40px;
   box-sizing: border-box;
   position: fixed;
-  top: 0;
-  z-index: 1000;
 }
 
 .site-logo, .user-icon {
   width: 60px;
   height: 60px;
-}
-
-.user-icon {
-  border-radius: 50%;
   cursor: pointer;
 }
 
@@ -360,7 +343,6 @@ body {
 
 .dropdown button:hover {
   background: #6a11cb;
-  color: #fff;
 }
 
 .content {
@@ -446,7 +428,7 @@ body {
 }
 
 .refresh-button {
-  background-color: #6a11cb;
+  background-color: #ff4c4c;
   margin-bottom: 20px;
   text-align: left;
 }
@@ -456,19 +438,6 @@ body {
   justify-content: center;
   align-items: center;
   gap: 5px;
-}
-
-.truncate {
-  width: 100%;
-  display: inline-block;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.centered {
-  text-align: center;
-  cursor: pointer;
 }
 
 .arrow-up::after {
@@ -481,7 +450,7 @@ body {
   margin-left: 5px;
 }
 
-/* Mobile Styles */
+/* Mobile */
 @media only screen and (max-width: 768px) {
   .parameter-card {
     background-color: #282c34;
@@ -528,5 +497,8 @@ body {
     width: 100%;
     padding: 10px;
   }
+}
+footer {
+  color: #a0a0c1;
 }
 </style>
