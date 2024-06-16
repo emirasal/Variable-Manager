@@ -16,10 +16,10 @@ Main Page:
 
 
 ## Available for testing
-The project is deployed on Google Cloud and you can use the tester account to login.
-Web: http://35.225.66.121:8080
-API: http://35.225.66.121:3000
+The project is deployed on Google Cloud and you can use the tester account to login. <br/>
+Web: http://35.225.66.121:8080 <br/>
+API: http://35.225.66.121:3000 <br/>
 
-Test Account:
-e-mail: tester@gmail.com
-password: tester
+Test Account: <br/>
+e-mail: tester@gmail.com <br/>
+password: tester <br/>
