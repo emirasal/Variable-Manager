@@ -214,7 +214,6 @@ const submitEdit = async (parameter) => {
         'Authorization': idToken
       }
     });
-    console.log(response.data);
     if (response.data.message === "Session Timed Out") {
       refreshPage();
       alert('Your session has timed out. Please try again.');
@@ -224,13 +223,6 @@ const submitEdit = async (parameter) => {
       parameter.desc = updatedParameter.desc;
       parameter.isEditing = false;
       currentEditingParameter.value = null;
-      await axios.post('http://localhost:3000/variables/setEditField', {
-        documentId: parameter.oldParameter,
-        isBeingEdited: false
-      }, {
-        headers: {
-          'Authorization': idToken
-      }});
     }
   } catch (error) {
     console.error('Error editing parameter:', error);
