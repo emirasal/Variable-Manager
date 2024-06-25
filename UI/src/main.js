@@ -1,8 +1,8 @@
 // main.js
 import { createApp } from 'vue'
 import App from './App.vue'
-import MainPage from './views/MainPage.vue'
-import SignInPage from './views/SignInPage.vue'
+import MainPage from './views/MainPage/MainPage.vue'
+import SignInPage from './views//SignInPage/SignInPage.vue'
 import { createRouter, createWebHistory } from 'vue-router'
 import { getAuth, onAuthStateChanged } from "firebase/auth";
 

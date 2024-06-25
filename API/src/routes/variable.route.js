@@ -1,6 +1,6 @@
 const express = require('express');
-const { uploadVariablesData, getVariablesData, deleteVariablesData, editVariablesData, setIsBeingEdited, getIsBeingEdited, getParameterAndValue } = require("../firebase.js");
-const { isAuthenticated } = require("../firebase.js");
+const { uploadVariablesData, getVariablesData, deleteVariablesData, editVariablesData, setIsBeingEdited, getIsBeingEdited, getParameterAndValue, checkVariable } = require("../services/variable.service.js");
+const { isAuthenticated } = require("../services/variable.service.js");
 
 const router = express.Router();
 
@@ -95,5 +95,23 @@ router.get('/getEditField/:documentId', async (req, res) => {
         res.status(500).json({ message: 'Internal Server Error' });
     }
 });
+
+// This method will run before user starts editing. And check if the variable is up-to-date
+router.get('/checkVariable/:documentId', async (req, res) => {
+    const documentId = req.params.documentId;
+  
+    try {
+      const result = await checkVariable(documentId);
+  
+      if (result.message === 'Variable has been changed') {
+        return res.status(200).json(result.message);
+      }
+
+      return res.status(200).json(result.data);
+    } catch (error) {
+      console.error('Error fetching document:', error);
+      return res.status(500).json({ message: 'Internal server error' });
+    }
+  });
 
 module.exports = router;

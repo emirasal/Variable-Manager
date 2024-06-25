@@ -1,5 +1,4 @@
 const { initializeApp, getApps } = require("firebase/app");
-const { errorHandler } = require("./helpers");
 const { getFirestore, doc, setDoc, collection, getDocs, getDoc, deleteDoc, updateDoc } = require("firebase/firestore");
 const admin = require("firebase-admin");
 require("dotenv").config();
@@ -15,7 +14,7 @@ const {
     FIREBASE_APP_ID,
 } = process.env;
 
-const serviceAccount = require('./codeway-case-study-49281-firebase-adminsdk-pq479-827abfe7e6.json');
+const serviceAccount = require('../../codeway-case-study-49281-firebase-adminsdk-pq479-827abfe7e6.json');
 
 const firebaseConfig = {
     apiKey: FIREBASE_API_KEY,
@@ -44,7 +43,7 @@ const initializeFirebaseApp = () => {
             firestoreDb = getFirestore(app);
         }
     } catch (error) {
-        errorHandler(error, "firebase-initializeFirebaseApp");
+        console.error("Error while starting the firebase app: ", error);
     }
 };
 
@@ -73,7 +72,7 @@ const uploadVariablesData = async (dataToUpload) => {
         await setDoc(docRef, dataToUpload);
         return docRef;
     } catch (error) {
-        errorHandler(error, "firebase-uploadProcessedData");
+        console.error("Error while uploading a variable", error);
     }
 };
 
@@ -88,7 +87,7 @@ const getVariablesData = async () => {
 
         return finalData;
     } catch (error) {
-        errorHandler(error, "firebase-getData");
+        console.error("Error while getting the data", error);
     }
 };
 
@@ -106,7 +105,7 @@ const getParameterAndValue = async () => {
 
         return parameterValueData;
     } catch (error) {
-        errorHandler(error, "firebase-getParameterAndValue");
+        console.error("Error while getting the parameter & value data", error);
     }
 };
 
@@ -125,7 +124,7 @@ const deleteVariablesData = async (documentId) => {
 
         return { success: true, message: "Document deleted successfully" };
     } catch (error) {
-        errorHandler(error, "firebase-deleteData");
+        console.error("Error while deleting the data", error);
         return { success: false, message: "Error deleting data" };
     }
 };
@@ -164,7 +163,7 @@ const editVariablesData = async (oldDocumentId, newData) => {
         }
         
     } catch (error) {
-        errorHandler(error, "firebase-editData");
+        console.error("Error while editing the data", error);
         return { success: false, message: "Error editing data" };
     }
 };
@@ -224,6 +223,24 @@ const getIsBeingEdited = async (documentId) => {
     }
 };
 
+const checkVariable = async (documentId) => {
+
+    try {
+        const docRef = doc(firestoreDb, 'variables', documentId);
+        const docSnap = await getDoc(docRef);
+
+        if (!docSnap.exists()) {
+            return { success: true, message: 'Variable has been changed' }
+        }
+        const data = docSnap.data();
+        return { success: true, data: data };
+
+    } catch (error) {
+        console.error('Error checking variable:', error);
+        return { success: false, message: 'Internal Server Error' };
+    }
+};
+
 
 const getFirebaseApp = () => app;
 
@@ -237,5 +254,6 @@ module.exports = {
     editVariablesData,
     setIsBeingEdited,
     getIsBeingEdited,
-    getParameterAndValue
+    getParameterAndValue,
+    checkVariable
 };

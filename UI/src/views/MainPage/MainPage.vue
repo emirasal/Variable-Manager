@@ -1,8 +1,8 @@
 <template>
   <div>
     <div class="header">
-      <img src="logo.png" alt="Logo" class="site-logo">
-      <img src="/user.png" alt="User Icon" @click="toggleDropdown" class="user-icon">
+      <img src="img/logo.png" alt="Logo" class="site-logo">
+      <img src="img/user.png" alt="User Icon" @click="toggleDropdown" class="user-icon">
       <div class="dropdown" v-if="showDropdown">
         <button @click="handleSignOut">Sign Out</button>
       </div>
@@ -169,11 +169,11 @@ const deleteParameter = async (parameter) => {
     console.error('Error deleting parameter:', error);
   }
 };
-
+/*
 const editParameter = async (parameter) => {
   try {
     const idToken = await auth.currentUser.getIdToken(true);
-    const response = await axios.get(`http://localhost:3000/variables/getEditField/${parameter.oldParameter}`, {
+    const response = await axios.get(`http://localhost:3000/variables/getEditField/${parameter.parameter}`, {
       headers: {
         'Authorization': idToken
       }
@@ -181,6 +181,32 @@ const editParameter = async (parameter) => {
     if (response.data.isBeingEdited) {
       alert('This parameter is already being edited by another user.');
     } else {
+      // Add the following code block
+      try {
+        const editFieldResponse = await axios.get(`http://localhost:3000/variables/checkVariable/${parameter.parameter}`, {
+          headers: {
+            'Authorization': idToken
+          }
+        });
+
+        console.log(parameter);
+        // Check if the variable exists
+        if (editFieldResponse.data !== 'Variable does not exist.') {
+          // If the variable exists, update edit fields
+          parameter.editKey = editFieldResponse.data.parameter;
+          parameter.editValue = editFieldResponse.data.value;
+          parameter.editDescription = editFieldResponse.data.desc;
+        } else {
+          
+          alert('Variable does not exist.');
+        }
+      } catch (error) {
+        console.error('Error fetching edit fields:', error);
+        // Handle error fetching edit fields
+        alert('Failed to fetch edit fields from the server.');
+      }
+
+
       await axios.post('http://localhost:3000/variables/setEditField', {
         documentId: parameter.oldParameter,
         isBeingEdited: true
@@ -189,16 +215,67 @@ const editParameter = async (parameter) => {
           'Authorization': idToken
         }
       });
-      parameter.isEditing = true;
-      parameter.editKey = parameter.parameter;
-      parameter.editValue = parameter.value;
-      parameter.editDescription = parameter.desc;
-      currentEditingParameter.value = parameter.oldParameter;
+       
+      parameter.isEditing = true; 
     }
   } catch (error) {
     console.error('Error checking or setting edit field:', error);
   }
+}; */
+
+const editParameter = async (parameter) => {
+  try {
+    const idToken = await auth.currentUser.getIdToken(true);
+
+    const checkResponse = await axios.get(`http://localhost:3000/variables/checkVariable/${parameter.parameter}`, {
+      headers: {
+        'Authorization': idToken
+      }
+    });
+
+    if (checkResponse.data !== 'Variable has been changed') {
+      // If the variable exists, fetch the edit fields
+      const editFieldResponse = await axios.get(`http://localhost:3000/variables/getEditField/${parameter.parameter}`, {
+        headers: {
+          'Authorization': idToken
+        }
+      });
+
+      if (editFieldResponse.data.isBeingEdited) {
+        alert('This parameter is already being edited by another user.');
+      } else {
+        // Update edit fields in the parameter
+        parameter.editKey = checkResponse.data.parameter;
+        parameter.editValue = checkResponse.data.value;
+        parameter.editDescription = checkResponse.data.desc;
+
+        // Set isBeingEdited to true after fetching edit fields
+        await axios.post('http://localhost:3000/variables/setEditField', {
+          documentId: parameter.parameter,
+          isBeingEdited: true
+        }, {
+          headers: {
+            'Authorization': idToken
+          }
+        });
+
+
+        parameter.isEditing = true;
+        //currentEditingParameter.value = parameter.oldParameter;
+      }
+    } else {
+      // Variable does not exist
+      alert('Variable has been changed.');
+      window.location.reload(); 
+    }
+  } catch (error) {
+    console.error('Error checking or setting edit field:', error);
+    // Handle error checking or setting edit field
+    alert('Failed to perform edit operation. Please try again later.');
+  }
 };
+
+
 
 const submitEdit = async (parameter) => {
   try {
@@ -292,205 +369,4 @@ onUnmounted(() => {
 });
 </script>
 
-<style scoped>
-body {
-  font-family: 'Roboto', sans-serif;
-}
-
-.header {
-  width: 100%;
-  display: flex;
-  justify-content: space-between;
-  padding: 20px 40px;
-  box-sizing: border-box;
-  position: fixed;
-}
-
-.site-logo, .user-icon {
-  width: 60px;
-  height: 60px;
-  cursor: pointer;
-}
-
-.dropdown {
-  position: absolute;
-  right: 20px;
-  top: 80px;
-  background-color: #2d2d44;
-  border-radius: 5px;
-  box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
-  padding: 10px;
-}
-
-.dropdown button {
-  background: none;
-  border: 1px solid #6a11cb;
-  border-radius: 5px;
-  color: #fff;
-  padding: 0.5rem 1rem;
-  cursor: pointer;
-  font-size: 1rem;
-  transition: background 0.3s ease, color 0.3s ease;
-}
-
-.dropdown button:hover {
-  background: #6a11cb;
-}
-
-.content {
-  width: 100%;
-  padding: 120px 20px 20px;
-  box-sizing: border-box;
-}
-
-.parameter-container {
-  width: 100%;
-  max-width: 90%;
-  margin: 0 auto;
-  background-color: #1e1e2f;
-  padding: 20px;
-  border-radius: 10px;
-  box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
-}
-
-.parameter-table {
-  width: 100%;
-  border-collapse: collapse;
-  color: #fff;
-  table-layout: fixed;
-}
-
-.parameter-table th, .parameter-table td {
-  padding: 10px;
-  border: 1px solid #333;
-  text-align: left;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.parameter-table th {
-  background-color: #282c34;
-}
-
-.parameter-table th.parameter-key, .parameter-table td.parameter-key,
-.parameter-table th.parameter-value, .parameter-table td.parameter-value,
-.parameter-table th.parameter-date, .parameter-table td.parameter-date,
-.parameter-table th.parameter-actions, .parameter-table td.parameter-actions {
-  width: 10%;
-  text-align: center;
-  vertical-align: middle;
-}
-
-.parameter-table th.parameter-description, .parameter-table td.parameter-description {
-  width: 40%;
-  text-align: center;
-  vertical-align: middle;
-}
-
-.new-parameter-row td, .new-parameter-row input, .new-input, .edit-input {
-  width: 100%;
-  padding: 10px;
-  border: 1px solid #333;
-  background-color: #282c34;
-  color: #fff;
-  box-sizing: border-box;
-}
-
-.new-parameter-row input, .new-input, .edit-input {
-  border-radius: 0;
-}
-
-.edit-button, .delete-button, .add-button, .submit-button, .refresh-button {
-  background-color: #007bff;
-  color: white;
-  border: none;
-  padding: 5px 10px;
-  margin: 0 2px;
-  cursor: pointer;
-  border-radius: 3px;
-}
-
-.delete-button {
-  background-color: #dc3545;
-}
-
-.add-button, .submit-button {
-  background-color: #28a745;
-}
-
-.refresh-button {
-  background-color: #ff4c4c;
-  margin-bottom: 20px;
-  text-align: left;
-}
-
-.action-buttons {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  gap: 5px;
-}
-
-.arrow-up::after {
-  content: '▲';
-  margin-left: 5px;
-}
-
-.arrow-down::after {
-  content: '▼';
-  margin-left: 5px;
-}
-
-/* Mobile */
-@media only screen and (max-width: 768px) {
-  .parameter-card {
-    background-color: #282c34;
-    border-radius: 10px;
-    box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
-    margin-bottom: 20px;
-    padding: 20px;
-    display: flex;
-    flex-direction: column;
-    color: #fff;
-  }
-
-  .parameter-details {
-    margin-bottom: 10px;
-    text-align: left;
-  }
-
-  .parameter-details div {
-    margin-bottom: 5px;
-  }
-
-  .parameter-card-actions {
-    display: flex;
-    justify-content: center;
-    gap: 10px;
-  }
-
-  .new-parameter {
-    background-color: #282c34;
-    border-radius: 10px;
-    box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
-    padding: 20px;
-    margin-top: 20px;
-    color: #fff;
-  }
-
-  .new-parameter input {
-    margin-bottom: 10px;
-    border-radius: 5px;
-    background-color: #1e1e2f;
-  }
-
-  .new-parameter button {
-    width: 100%;
-    padding: 10px;
-  }
-}
-footer {
-  color: #a0a0c1;
-}
-</style>
+<style src="./MainPage.css"></style>
