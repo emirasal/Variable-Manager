@@ -14,7 +14,7 @@ const {
     FIREBASE_APP_ID,
 } = process.env;
 
-const serviceAccount = require('../../codeway-case-study-49281-firebase-adminsdk-pq479-827abfe7e6.json');
+const serviceAccount = require('../../codeway-case-study-49281-firebase-adminsdk-pq479-306c108854.json');
 
 const firebaseConfig = {
     apiKey: FIREBASE_API_KEY,
