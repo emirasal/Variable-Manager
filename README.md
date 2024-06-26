@@ -31,7 +31,6 @@ To run the UI:
 ## Live Version
 The project is deployed on Google Cloud and test account can be used to login. <br/>
 ### Web: http://35.225.66.121:8080 <br/>
-API available at: http://35.225.66.121:3000 <br/>
 
 Test Account: <br/>
 e-mail: tester@gmail.com <br/>
