@@ -1,9 +1,11 @@
 const { initializeApp, getApps } = require("firebase/app");
-const { getFirestore, doc, setDoc, collection, getDocs, getDoc, deleteDoc, updateDoc } = require("firebase/firestore");
+const { getFirestore, doc, setDoc, collection, getDocs, getDoc, deleteDoc, updateDoc,  } = require("firebase/firestore");
 const admin = require("firebase-admin");
 require("dotenv").config();
 
 let editTimeouts = {};
+let variablesCacheDict = {};
+
 
 const {
     FIREBASE_API_KEY,
@@ -67,45 +69,36 @@ const isAuthenticated = (req, res, next) => {
 const uploadVariablesData = async (dataToUpload) => {
     try {
         dataToUpload.isBeingEdited = false;
-
         const docRef = doc(firestoreDb, "variables", dataToUpload.parameter);
         await setDoc(docRef, dataToUpload);
+        
+        // Updating local dictionary cache
+        variablesCacheDict[docRef.id] = dataToUpload;
+        
         return docRef;
     } catch (error) {
         console.error("Error while uploading a variable", error);
+        throw error;
     }
 };
 
-const getVariablesData = async () => {
+const getAllVariablesData = async () => {
     try {
-        const collectionRef = collection(firestoreDb, "variables");
-        const querySnapshot = await getDocs(collectionRef);
+        if (Object.keys(variablesCacheDict).length === 0) {
+            const collectionRef = collection(firestoreDb, "variables");
+            const querySnapshot = await getDocs(collectionRef);
 
+            querySnapshot.docs.forEach(doc => {
+                const data = doc.data();
+                const { isBeingEdited, ...rest } = data;
+                variablesCacheDict[doc.id] = rest;
+            });
+        }
 
-        // Extracting data from each document
-        const finalData = querySnapshot.docs.map(doc => doc.data());
-
-        return finalData;
+        return Object.values(variablesCacheDict);
     } catch (error) {
         console.error("Error while getting the data", error);
-    }
-};
-
-const getParameterAndValue = async () => {
-    try {
-        const collectionRef = collection(firestoreDb, "variables");
-        const querySnapshot = await getDocs(collectionRef);
-
-        // Create an object to hold parameter-value pairs
-        const parameterValueData = {};
-        querySnapshot.forEach(doc => {
-            const data = doc.data();
-            parameterValueData[data.parameter] = data.value;
-        });
-
-        return parameterValueData;
-    } catch (error) {
-        console.error("Error while getting the parameter & value data", error);
+        throw error;
     }
 };
 
@@ -113,33 +106,31 @@ const deleteVariablesData = async (documentId) => {
     try {
         const docRef = doc(firestoreDb, "variables", documentId);
         
-        // Check if the document exists
-        const docSnap = await getDoc(docRef);
-        if (!docSnap.exists()) {
-            return { success: false, message: "No matching document found" };
-        }
-
-        // Delete the document
+        // Deleting from Firestore
         await deleteDoc(docRef);
-
+        
+        // Updating local dictionary cache
+        delete variablesCacheDict[documentId];
+        
         return { success: true, message: "Document deleted successfully" };
     } catch (error) {
         console.error("Error while deleting the data", error);
-        return { success: false, message: "Error deleting data" };
+        throw error;
     }
 };
+
 
 const editVariablesData = async (oldDocumentId, newData) => {
     try {
         const oldDocRef = doc(firestoreDb, "variables", oldDocumentId);
         
-        // Check if the old document exists
+        // Checking if the old document exists
         const oldDocSnap = await getDoc(oldDocRef);
         if (!oldDocSnap.exists()) {
             return { success: false, message: "No matching document found to edit" };
         }
 
-        // Check if a document with the new parameter already exists (but only if parameter is changed)
+        // Checking if a document with the new parameter already exists (but only if parameter is changed)
         const newDocRef = doc(firestoreDb, "variables", newData.parameter);
         if (oldDocumentId != newData.parameter) {
             const newDocSnap = await getDoc(newDocRef);
@@ -148,14 +139,15 @@ const editVariablesData = async (oldDocumentId, newData) => {
             }
         }
 
-        // Lets check if the user timed-out (It should be true)
+        // Checking if the user timed-out (It should be true)
         if((await getIsBeingEdited(oldDocumentId)).isBeingEdited) {
             // Delete the old document
             await deleteDoc(oldDocRef);
+            delete variablesCacheDict[oldDocumentId];
 
-            // Create a new document with the new data
+            // Creating a new document with the new data
             await setDoc(newDocRef, newData);
-
+            variablesCacheDict[newData.parameter] = newData;
 
             return { success: true, message: "Document edited successfully" };
         } else {
@@ -172,13 +164,13 @@ const setIsBeingEdited = async (documentId, isBeingEdited) => {
     try {
         const docRef = doc(firestoreDb, 'variables', documentId);
 
-        // Check if the document exists
+        // Checking if the document exists
         const docSnap = await getDoc(docRef);
         if (!docSnap.exists()) {
             return { success: false, message: "No matching document found" };
         }
 
-        // Update the isBeingEdited field with the given value
+        // Updating the isBeingEdited field with the given value
         await updateDoc(docRef, { isBeingEdited: isBeingEdited });
 
         if (isBeingEdited) {
@@ -205,7 +197,6 @@ const getIsBeingEdited = async (documentId) => {
     try {
         const docRef = doc(firestoreDb, 'variables', documentId);
 
-        // Get the document
         const docSnap = await getDoc(docRef);
 
         // If document doesn't exist, return not found
@@ -213,7 +204,7 @@ const getIsBeingEdited = async (documentId) => {
             return { success: false, message: 'No matching document found' };
         }
 
-        // Extract isBeingEdited field
+        // Extracting isBeingEdited field
         const isBeingEdited = docSnap.data().isBeingEdited;
 
         return { success: true, isBeingEdited: isBeingEdited };
@@ -249,11 +240,10 @@ module.exports = {
     isAuthenticated,
     getFirebaseApp,
     uploadVariablesData,
-    getVariablesData,
+    getAllVariablesData,
     deleteVariablesData,
     editVariablesData,
     setIsBeingEdited,
     getIsBeingEdited,
-    getParameterAndValue,
     checkVariable
 };

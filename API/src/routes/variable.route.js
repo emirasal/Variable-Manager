@@ -1,5 +1,5 @@
 const express = require('express');
-const { uploadVariablesData, getVariablesData, deleteVariablesData, editVariablesData, setIsBeingEdited, getIsBeingEdited, getParameterAndValue, checkVariable } = require("../services/variable.service.js");
+const { uploadVariablesData, getAllVariablesData, deleteVariablesData, editVariablesData, setIsBeingEdited, getIsBeingEdited, checkVariable } = require("../services/variable.service.js");
 const { isAuthenticated } = require("../services/variable.service.js");
 
 const router = express.Router();
@@ -17,7 +17,7 @@ router.post('/add', async (req, res) => {
 
 router.get('/getAll', async (req, res) => {
     try {
-        const data = await getVariablesData();
+        const data = await getAllVariablesData();
         res.json(data);
     } catch (error) {
         console.error("Error retrieving data:", error);
@@ -25,15 +25,6 @@ router.get('/getAll', async (req, res) => {
     }
 });
 
-router.get('/getAllParameterAndValue', async (req, res) => {
-    try {
-        const data = await getParameterAndValue();
-        res.json(data);
-    } catch (error) {
-        console.error("Error retrieving parameter and value:", error);
-        res.status(500).json({ error: "Internal Server Error" });
-    }
-});
 
 router.delete('/delete/:parameter', isAuthenticated, async (req, res) => {
     try {

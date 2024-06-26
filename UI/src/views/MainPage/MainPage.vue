@@ -158,13 +158,26 @@ const addParameter = async () => {
 
 const deleteParameter = async (parameter) => {
   try {
-    const idToken = await auth.currentUser.getIdToken(true);
-    await axios.delete(`http://localhost:3000/variables/delete/${parameter.parameter}`, {
-      headers: {
-        'Authorization': idToken
+      const idToken = await auth.currentUser.getIdToken(true);
+      const editFieldResponse = await axios.get(`http://localhost:3000/variables/getEditField/${parameter.parameter}`, {
+        headers: {
+          'Authorization': idToken
+        }
+      });
+
+      if (editFieldResponse.data.isBeingEdited) {
+        alert("This variable is being edited by someone else.")
+      } 
+      else {
+        
+        await axios.delete(`http://localhost:3000/variables/delete/${parameter.parameter}`, {
+          headers: {
+            'Authorization': idToken
+          }
+        });
+        parameters.value = parameters.value.filter(p => p.parameter !== parameter.parameter);
       }
-    });
-    parameters.value = parameters.value.filter(p => p.parameter !== parameter.parameter);
+  
   } catch (error) {
     console.error('Error deleting parameter:', error);
   }
