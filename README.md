@@ -29,7 +29,7 @@ To run the UI:
 6) To run, write 'npm run serve'.
 
 ## Live Version
-The project is deployed on Google Cloud and test account can be used to login. <br/>
+The project is deployed on Google Cloud and test account can be used to login. The connection may seem slow because it is running on US servers and have the lowest possible resources but it is running faster in local. <br/>
 ### Web: http://35.225.66.121:8080 <br/>
 
 Test Account: <br/>
