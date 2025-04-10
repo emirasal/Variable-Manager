@@ -1,4 +1,4 @@
-# Codeway Case Study
+# Variable Manager
 
 ## Summary
 The project is built with vue.js and node.js. It has login system and parameter management system. App is both competible with web and mobile. 
